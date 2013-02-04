@@ -7,6 +7,19 @@ import re
 sys.path.append(os.path.dirname(__file__))
 import freetype
 
+sfnt_info_priority = [
+    (2052, 3, 3),
+    (2052, 3, 1),
+    (33, 1, 25),
+    (1028, 3, 4),
+    (1028, 3, 1),
+    (19, 1, 2),
+    (1041, 3, 2),
+    (1041, 3, 1),
+    (11, 1, 1),
+    (1033, 3, 1),
+]
+
 def paser_sfnt_name(face, autochoose=True):
     names = [face.get_sfnt_name(i) for i in range(face.sfnt_name_count)]
     langs = {x.language_id for x in names}
@@ -42,11 +55,17 @@ def paser_sfnt_name(face, autochoose=True):
                         encoding = None
                         s = ""
         name.encoding = encoding
-        name.unicode = s
+        name.unicode = s.strip("\x00")
+
     if autochoose:
-        pass
+        namedict = {(x.language_id, x.platform_id, x.encoding_id):x.unicode
+                for x in names}
+        for info in sfnt_info_priority:
+            if info in namedict:
+                return namedict[info]
+        return names[-1].unicode
     else:
-        return names#{x.unicode for x in names}
+        return {x.unicode for x in names}
 
 sys.stdout = open(r'D:\temp\fr.txt', mode='w', encoding='utf_8_sig')
 
@@ -58,17 +77,9 @@ for fontfile in fontfiles:
     faces = [freetype.Face(fontfile)]
     faces += [freetype.Face(fontfile, i) for i in range(1, faces[0].num_faces)]
     for face in faces:
-        print("\t"*1, face.family_name, face.font_format)
-        names = paser_sfnt_name(face, False)
-        for name in names:
-            print("\t"*2,
-                str(name.name_id).rjust(2),
-                str(name.platform_id).rjust(2),
-                str(name.encoding_id).rjust(2),
-                str(name.language_id).rjust(4),
-                name.encoding.ljust(10),
-                name.unicode.ljust(100),
-                name.string)
+        #print("\t"*1, face.family_name, face.font_format)
+        names = paser_sfnt_name(face, True)
+        print(names)
         print()
 
 sys.stdout.close()
