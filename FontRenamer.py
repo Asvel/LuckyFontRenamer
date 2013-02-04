@@ -81,9 +81,11 @@ for fontfile in fontfiles:
     faces = [freetype.Face(fontfile)]
     faces += [freetype.Face(fontfile, i) for i in range(1, faces[0].num_faces)]
     for face in faces:
-        #print("\t"*1, face.family_name, face.font_format)
-        names = guess_sfnt_name(face, True)
-        print(names)
-        print()
+        if face.sfnt_name_count > 0:
+            name = guess_sfnt_name(face, True)
+        else:
+            name = face.family_name.decode('ascii')
+        print(name)
+    print()
 
 sys.stdout.close()
