@@ -20,10 +20,13 @@ sfnt_info_priority = [
     (1033, 3, 1),
 ]
 
-def paser_sfnt_name(face, autochoose=True):
+def guess_sfnt_name(face, autochoose=True):
+    # 获取原始字体名称
     names = [face.get_sfnt_name(i) for i in range(face.sfnt_name_count)]
     langs = {x.language_id for x in names}
     names = [x for x in names if x.name_id == 4]
+
+    # 猜测字体名称的编码并尝试解码
     for name in names:
         try:
             encoding = freetype.sfnt_name_encoding\
@@ -57,6 +60,7 @@ def paser_sfnt_name(face, autochoose=True):
         name.encoding = encoding
         name.unicode = s.strip("\x00")
 
+    # (猜测合适的字体名称并)返回字体名称
     if autochoose:
         namedict = {(x.language_id, x.platform_id, x.encoding_id):x.unicode
                 for x in names}
@@ -78,7 +82,7 @@ for fontfile in fontfiles:
     faces += [freetype.Face(fontfile, i) for i in range(1, faces[0].num_faces)]
     for face in faces:
         #print("\t"*1, face.family_name, face.font_format)
-        names = paser_sfnt_name(face, True)
+        names = guess_sfnt_name(face, True)
         print(names)
         print()
 
