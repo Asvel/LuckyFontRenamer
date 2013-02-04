@@ -71,21 +71,34 @@ def guess_sfnt_name(face, autochoose=True):
     else:
         return {x.unicode for x in names}
 
+def guess_names(fontfilename):
+    names = []
+    try:
+        faces = [freetype.Face(fontfilename)]
+        faces += [freetype.Face(fontfilename, i)
+                  for i in range(1, faces[0].num_faces)]
+    except:
+        faces = []
+    for face in faces:
+        if face.sfnt_name_count > 0:
+            name = guess_sfnt_name(face, True)
+        elif face.family_name is not None:
+            name = face.family_name.decode('ascii')
+        else:
+            name = None
+        if name not in names:
+            names.append(name)
+    return names
+
 sys.stdout = open(r'D:\temp\fr.txt', mode='w', encoding='utf_8_sig')
 
-fontdir = r"D:\misc\Font\fonts"
+fontdir = r"D:\temp\Fonts"
 fontfiles = [os.path.join(fontdir, x) for x in os.listdir(fontdir)]
 
 for fontfile in fontfiles:
     print(fontfile)
-    faces = [freetype.Face(fontfile)]
-    faces += [freetype.Face(fontfile, i) for i in range(1, faces[0].num_faces)]
-    for face in faces:
-        if face.sfnt_name_count > 0:
-            name = guess_sfnt_name(face, True)
-        else:
-            name = face.family_name.decode('ascii')
-        print(name)
+    names = guess_names(fontfile)
+    print(" & ".join(names))
     print()
 
 sys.stdout.close()
