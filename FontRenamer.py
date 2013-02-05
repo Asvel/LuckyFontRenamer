@@ -7,6 +7,13 @@ import re
 sys.path.append(os.path.dirname(__file__))
 import freetype
 
+sys.stdout = open(r'D:\temp\fr.txt', mode='w', encoding='utf_8_sig')
+
+output_normal = sys.stdout
+output_error = sys.stderr
+output_debug = None#sys.stdout
+sys.stdout = None
+
 sfnt_info_priority = [
     (2052, 3, 3),
     (2052, 3, 1),
@@ -17,6 +24,11 @@ sfnt_info_priority = [
     (1041, 3, 2),
     (1041, 3, 1),
     (11, 1, 1),
+    (1042, 3, 5),
+    (1042, 3, 1),
+    (2066, 3, 6),
+    (2066, 3, 1),
+    (23, 1, 3),
     (1033, 3, 1),
 ]
 
@@ -59,6 +71,17 @@ def guess_sfnt_name(face, autochoose=True):
                         s = ""
         name.encoding = encoding
         name.unicode = s.strip("\x00")
+        if name.unicode == "":
+            print("\t", "无法解码字体名称", name.string, file=output_error)
+        print("\t",
+            str(name.platform_id).rjust(1),
+            str(name.encoding_id).rjust(2),
+            str(name.language_id).rjust(4),
+            name.encoding.ljust(10),
+            name.unicode.ljust(80),
+            name.string,
+            file=output_debug
+        )
 
     # (猜测合适的字体名称并)返回字体名称
     if autochoose:
@@ -67,7 +90,11 @@ def guess_sfnt_name(face, autochoose=True):
         for info in sfnt_info_priority:
             if info in namedict:
                 return namedict[info]
-        return names[-1].unicode
+        if len(names) > 0:
+            return names[-1].unicode
+        else:
+            print("没有从SFNT表中取得字体名称", file=output_error)
+            return ""
     else:
         return {x.unicode for x in names}
 
@@ -77,28 +104,48 @@ def guess_names(fontfilename):
         faces = [freetype.Face(fontfilename)]
         faces += [freetype.Face(fontfilename, i)
                   for i in range(1, faces[0].num_faces)]
-    except:
+    except freetype.ft_errors.FT_Exception as e:
         faces = []
+        print("无法载入文件", fontfilename, "-", e, file=output_error)
     for face in faces:
         if face.sfnt_name_count > 0:
             name = guess_sfnt_name(face, True)
-        elif face.family_name is not None:
-            name = face.family_name.decode('ascii')
         else:
-            name = None
-        if name not in names:
-            names.append(name)
+            try:
+                name = face.family_name.decode('ascii')
+            except:
+                try:
+                    name = face.postscript_name.decode('ascii')
+                except:
+                    name = None
+        if name is not None:
+            if name not in names:
+                names.append(name)
+        else:
+            print("无法获取字体名称", fontfilename, file=output_error)
+        print("\t"*2, name, file=output_debug)
     return names
 
-sys.stdout = open(r'D:\temp\fr.txt', mode='w', encoding='utf_8_sig')
+def try_to_rename(fontfilename):
+    print(fontfilename, file=output_normal)
+    names = guess_names(fontfilename)
+    newfilename = " & ".join(names) + os.path.splitext(fontfilename)[1].lower()
+    if newfilename != "":
+        print("重命名为", newfilename, file=output_normal)
+        newfilepath = os.path.join(os.path.dirname(fontfilename), newfilename)
+        if not os.path.exists(newfilename):
+            try:
+                pass#os.rename(fontfile, newfilepath)
+            except OSError as e:
+                print("重命名失败", e, file=output_error)
+        else:
+            print("重命名失败", "目标文件已存在", file=output_error)
+    else:
+        print("重命名失败", "没有取得有效的字体文件名", file=output_error)
+    print(file=output_normal)
 
 fontdir = r"D:\temp\Fonts"
 fontfiles = [os.path.join(fontdir, x) for x in os.listdir(fontdir)]
 
 for fontfile in fontfiles:
-    print(fontfile)
-    names = guess_names(fontfile)
-    print(" & ".join(names))
-    print()
-
-sys.stdout.close()
+    try_to_rename(fontfile)
