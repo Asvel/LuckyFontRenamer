@@ -45,9 +45,6 @@ def guess_sfnt_name(face, autochoose=True):
                        [name.platform_id][name.encoding_id]
         except:
             encoding = 'utf_16_be'
-        if encoding == 'mac_roman' and\
-           {1041} <= langs <= {0,11,1033,1041}:
-            encoding = 'shift_jis'
         try:
             s = name.string.decode(encoding)
             if "\x00" in s.strip("\x00"):
