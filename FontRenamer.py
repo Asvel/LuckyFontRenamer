@@ -14,6 +14,76 @@ output_error = sys.stderr
 output_debug = None#sys.stdout
 sys.stdout = None
 
+sfnt_info_encoding = {
+    0:{
+        0:'utf_16_be',
+        1:'utf_16_be',
+        2:'utf_16_be',
+        3:'utf_16_be',
+        4:'utf_16_be',
+        5:'utf_16_be',
+        },
+    1:{
+        0:'mac_roman',
+        1:'shift_jis',
+        2:'big5',
+        3:'euc_kr',
+        4:'iso8859_6',
+        5:'iso8859_8',
+        6:'mac_greek',
+        7:'iso8859_5',
+        8:'ascii',
+        9:'ascii',
+        10:'ascii',
+        11:'ascii',
+        12:'ascii',
+        13:'ascii',
+        14:'ascii',
+        15:'ascii',
+        16:'ascii',
+        17:'ascii',
+        18:'ascii',
+        19:'ascii',
+        20:'ascii',
+        21:'cp874',
+        22:'ascii',
+        23:'ascii',
+        24:'ascii',
+        25:'euc_cn',
+        26:'ascii',
+        27:'ascii',
+        28:'ascii',
+        29:'ascii',
+        30:'cp1258',
+        31:'ascii',
+        32:'ascii',
+        },
+    2:{
+        0:'ascii',
+        1:'utf_16_be',
+        2:'latin_1',
+        },
+    3:{
+        0:'utf_16_be',
+        1:'utf_16_be',
+        2:'shift_jis',
+        3:'gb2312',
+        4:'big5',
+        5:'cp949',
+        6:'johab',
+        10:'utf_32_be',
+        },
+    4:{
+        0:'ascii',
+        },
+    7:{
+        0:'utf_16_be',
+        1:'utf_16_be',
+        2:'utf_16_be',
+        3:'utf_16_be',
+        },
+}
+
 sfnt_info_priority = [
     (2052, 3, 3),
     (2052, 3, 1),
@@ -41,8 +111,7 @@ def guess_sfnt_name(face, autochoose=True):
     # 猜测字体名称的编码并尝试解码
     for name in names:
         try:
-            encoding = freetype.sfnt_name_encoding\
-                       [name.platform_id][name.encoding_id]
+            encoding = sfnt_info_encoding[name.platform_id][name.encoding_id]
         except:
             encoding = 'utf_16_be'
         try:
