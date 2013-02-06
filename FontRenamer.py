@@ -3,14 +3,10 @@
 import os
 import sys
 import re
+import logging
 
 sys.path.append(os.path.dirname(__file__))
 import freetype
-
-output_normal = sys.stdout
-output_error = sys.stdout
-output_debug = sys.stdout
-sys.stdout = None
 
 sfnt_info_encoding = {
     0:{
@@ -135,16 +131,9 @@ def guess_sfnt_name(face, autochoose=True):
         name.encoding = encoding
         name.unicode = s.strip("\x00")
         if name.unicode == "":
-            print("\t", "无法解码字体名称", name.string, file=output_error)
-        print("\t",
-            str(name.platform_id).rjust(1),
-            str(name.encoding_id).rjust(2),
-            str(name.language_id).rjust(4),
-            name.encoding.ljust(10),
-            name.unicode.ljust(80),
-            name.string,
-            file=output_debug
-        )
+            logging.error("\t" + "无法解码字体名称" + name.string)
+        logging.debug("\t {0.platform_id} {0.encoding_id:>2} {0.language_id:>4}"
+                " {0.encoding:<10} {0.unicode:<80} {0.string}".format(name))
 
     # (猜测合适的字体名称并)返回字体名称
     if autochoose:
@@ -156,7 +145,7 @@ def guess_sfnt_name(face, autochoose=True):
         if len(names) > 0:
             return names[-1].unicode
         else:
-            print("没有从SFNT表中取得字体名称", file=output_error)
+            logging.error("没有从SFNT表中取得字体名称")
             return ""
     else:
         return {x.unicode for x in names}
@@ -169,7 +158,7 @@ def guess_names(fontfilename):
                   for i in range(1, faces[0].num_faces)]
     except freetype.ft_errors.FT_Exception as e:
         faces = []
-        print("无法载入文件", fontfilename, "-", e, file=output_error)
+        logging.error("无法载入文件 {} - {}".format(fontfilename, e))
     for face in faces:
         name = ""
         if face.sfnt_name_count > 0:
@@ -188,29 +177,29 @@ def guess_names(fontfilename):
             if name not in names:
                 names.append(name)
         else:
-            print("无法获取字体名称", fontfilename, file=output_error)
-        print("\t"*2, name, file=output_debug)
+            logging.error("无法获取字体名称 {}".format(fontfilename))
+        logging.debug("\t\t {}".format(name))
     return names
 
 def try_to_rename(fontfilename, preview=False):
-    print(fontfilename, file=output_normal)
+    logging.info(fontfilename)
     names = guess_names(fontfilename)
     newfilename = " & ".join(names)
     if newfilename != "":
         newfilename += os.path.splitext(fontfilename)[1].lower()
-        print("重命名为", newfilename, file=output_normal)
+        logging.info("重命名为 {}".format(newfilename))
         newfilepath = os.path.join(os.path.dirname(fontfilename), newfilename)
         if not os.path.exists(newfilename):
             try:
                 if not preview:
                     os.rename(fontfilename, newfilepath)
             except OSError as e:
-                print("重命名失败", e, file=output_error)
+                logging.error("重命名失败 {}".format(e))
         else:
-            print("重命名失败", "目标文件已存在", file=output_error)
+            logging.error("重命名失败 {}".format("目标文件已存在"))
     else:
-        print("重命名失败", "没有取得有效的字体文件名", file=output_error)
-    print(file=output_normal)
+        logging.error("重命名失败 {}".format("没有取得有效的字体文件名"))
+    logging.info("")
 
 def main():
     import argparse
@@ -239,21 +228,15 @@ def main():
 """,
         formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('file', nargs='+',help="字体文件名")
-    parser.add_argument('-o', '--output', default='normal',
-        choices=['none', 'error', 'normal', 'debug'],
+    parser.add_argument('-l', '--loglevel', default='normal',
+        choices=['none', 'error', 'warning', 'info', 'debug'],
         help="输出信息，后面的选项包含前面所有选项，默认为 normal")
     parser.add_argument('-p', '--preview', action="store_true",
         help="预览，只输出信息而不重命名文件")
     args = parser.parse_args()
 
-    output = args.output.lower()
-    global output_error, output_normal, output_debug
-    if output == 'none':
-        output_error = output_normal = output_debug = None
-    elif output == 'error':
-        output_normal = output_debug = None
-    elif output == 'normal':
-        output_debug = None
+    loglevel = getattr(logging, args.loglevel.upper(), logging.CRITICAL)
+    logging.basicConfig(format='%(message)s', level=loglevel)
 
     preview = args.preview
 
@@ -271,6 +254,8 @@ def main():
 
     for file in filelist:
         try_to_rename(file, preview)
+
+    logging.shutdown()
 
 if __name__ == '__main__':
     main()
