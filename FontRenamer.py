@@ -222,12 +222,12 @@ def main():
         epilog="""\
 备注：
     字体文件名使用 * 开头表示这是一个含有字体文件名列表的文本文件(UTF-8编码)
-    字体文件名使用 \ 开头表示这是一个含有字体文件的目录
+    字体文件名使用 \ 或 / 结尾表示这是一个含有字体文件的目录
 
 示例：
     %(prog)s msyh.ttc
     %(prog)s *fontlist.txt
-    %(prog)s \\C:\\test\\ -l debug -o debug.txt -p
+    %(prog)s C:\\test\\ -l debug -o debug.txt -p
 """,
         formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('file', nargs='+',help="字体文件名")
@@ -257,9 +257,9 @@ def main():
             with open(filename[1:], encoding='utf-8') as f:
                 for filename in f:
                     filelist.append(filename[:-1])
-        elif filename.startswith("\\"):
-            for fn in os.listdir(filename[1:]):
-                filelist.append(os.path.join(filename[1:], fn))
+        elif filename.endswith("\\") or filename.endswith("/"):
+            for fn in os.listdir(filename):
+                filelist.append(os.path.join(filename, fn))
         else:
             filelist.append(filename)
 
