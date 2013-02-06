@@ -218,11 +218,11 @@ def main():
             .replace("show this help message and exit", "显示此帮助并退出")
 
     parser = ArgumentParser(
-        description='猜测字体的本地化名称并重命名字体',
+        description='猜测字体的本地化名称并重命名字体文件',
         epilog="""\
 备注：
-    字体文件名使用 * 开头表示这是一个含有文件名列表的文本文件(UTF-8编码)
-    字体文件名使用 \ 开头表示这是一个含有文件的目录
+    字体文件名使用 * 开头表示这是一个含有字体文件名列表的文本文件(UTF-8编码)
+    字体文件名使用 \ 开头表示这是一个含有字体文件的目录
 
 示例：
     %(prog)s msyh.ttc
@@ -233,7 +233,7 @@ def main():
     parser.add_argument('file', nargs='+',help="字体文件名")
     parser.add_argument('-l', '--loglevel', default='info',
         choices=['none', 'error', 'warning', 'info', 'debug'],
-        help="输出信息，后面的选项包含前面所有选项，默认为 info")
+        help="输出信息，后面的选项包含前面所有的选项，默认为 info")
     parser.add_argument('-o', '--output', default=None,
         help="输出文件，默认输出至 stderr")
     parser.add_argument('-p', '--preview', action="store_true",
