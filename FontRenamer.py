@@ -7,11 +7,9 @@ import re
 sys.path.append(os.path.dirname(__file__))
 import freetype
 
-sys.stdout = open(r'D:\temp\fr.txt', mode='w', encoding='utf_8_sig')
-
 output_normal = sys.stdout
-output_error = sys.stderr
-output_debug = None#sys.stdout
+output_error = sys.stdout
+output_debug = sys.stdout
 sys.stdout = None
 
 sfnt_info_encoding = {
@@ -192,16 +190,18 @@ def guess_names(fontfilename):
         print("\t"*2, name, file=output_debug)
     return names
 
-def try_to_rename(fontfilename):
+def try_to_rename(fontfilename, preview=False):
     print(fontfilename, file=output_normal)
     names = guess_names(fontfilename)
-    newfilename = " & ".join(names) + os.path.splitext(fontfilename)[1].lower()
+    newfilename = " & ".join(names)
     if newfilename != "":
+        newfilename += os.path.splitext(fontfilename)[1].lower()
         print("重命名为", newfilename, file=output_normal)
         newfilepath = os.path.join(os.path.dirname(fontfilename), newfilename)
         if not os.path.exists(newfilename):
             try:
-                pass#os.rename(fontfile, newfilepath)
+                if not preview:
+                    os.rename(fontfilename, newfilepath)
             except OSError as e:
                 print("重命名失败", e, file=output_error)
         else:
@@ -210,8 +210,65 @@ def try_to_rename(fontfilename):
         print("重命名失败", "没有取得有效的字体文件名", file=output_error)
     print(file=output_normal)
 
-fontdir = r"D:\temp\Fonts"
-fontfiles = [os.path.join(fontdir, x) for x in os.listdir(fontdir)]
+def main():
+    import argparse
+    class ArgumentParser(argparse.ArgumentParser):
+        def format_usage(self):
+            return argparse.ArgumentParser.format_usage(self)\
+            .replace("usage:", "用法：")
+        def format_help(self):
+            return argparse.ArgumentParser.format_help(self)\
+            .replace("usage:", "用法：")\
+            .replace("positional arguments:", "参数：")\
+            .replace("\n\noptional arguments:", "")\
+            .replace("show this help message and exit", "显示此帮助并退出")
 
-for fontfile in fontfiles:
-    try_to_rename(fontfile)
+    parser = ArgumentParser(
+        description='猜测字体的本地化名称并重命名字体',
+        epilog="""\
+备注：
+    字体文件名使用 * 开头表示这是一个含有文件名列表的文本文件(UTF-8编码)
+    字体文件名使用 \ 开头表示这是一个含有文件的目录
+
+示例：
+    %(prog)s msyh.ttc
+    %(prog)s *fontlist.txt
+    %(prog)s \\C:\\test\\ -o debug -p
+""",
+        formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('file', nargs='+',help="字体文件名")
+    parser.add_argument('-o', '--output', default='normal',
+        choices=['none', 'error', 'normal', 'debug'],
+        help="输出信息，后面的选项包含前面所有选项，默认为 normal")
+    parser.add_argument('-p', '--preview', action="store_true",
+        help="预览，只输出信息而不重命名文件")
+    args = parser.parse_args()
+
+    output = args.output.lower()
+    global output_error, output_normal, output_debug
+    if output == 'none':
+        output_error = output_normal = output_debug = None
+    elif output == 'error':
+        output_normal = output_debug = None
+    elif output == 'normal':
+        output_debug = None
+
+    preview = args.preview
+
+    filelist = []
+    for filename in args.file:
+        if filename.startswith("*"):
+            with open(filename[1:], encoding='utf-8') as f:
+                for filename in f:
+                    filelist.append(filename[:-1])
+        elif filename.startswith("\\"):
+            for fn in os.listdir(filename[1:]):
+                filelist.append(os.path.join(filename[1:], fn))
+        else:
+            filelist.append(filename)
+
+    for file in filelist:
+        try_to_rename(file, preview)
+
+if __name__ == '__main__':
+    main()
