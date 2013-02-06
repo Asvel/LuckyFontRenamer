@@ -131,8 +131,8 @@ def guess_sfnt_name(face, autochoose=True):
         name.encoding = encoding
         name.unicode = s.strip("\x00")
         if name.unicode == "":
-            logging.error("\t" + "无法解码字体名称" + name.string)
-        logging.debug("\t {0.platform_id} {0.encoding_id:>2} {0.language_id:>4}"
+            logging.warning("\t无法解码字体名称".format(name.string))
+        logging.debug("\t{0.platform_id} {0.encoding_id:>2} {0.language_id:>4}"
                 " {0.encoding:<10} {0.unicode:<80} {0.string}".format(name))
 
     # (猜测合适的字体名称并)返回字体名称
@@ -145,7 +145,7 @@ def guess_sfnt_name(face, autochoose=True):
         if len(names) > 0:
             return names[-1].unicode
         else:
-            logging.error("没有从SFNT表中取得字体名称")
+            logging.warning("没有从SFNT表中取得字体名称")
             return ""
     else:
         return {x.unicode for x in names}
@@ -177,8 +177,9 @@ def guess_names(fontfilename):
             if name not in names:
                 names.append(name)
         else:
-            logging.error("无法获取字体名称 {}".format(fontfilename))
-        logging.debug("\t\t {}".format(name))
+            logging.error("无法获取字体文件 {} 中某一字体的名称".format(
+                fontfilename))
+        logging.debug("\t\t{}".format(name))
     return names
 
 def try_to_rename(fontfilename, preview=False):
@@ -189,16 +190,18 @@ def try_to_rename(fontfilename, preview=False):
         newfilename += os.path.splitext(fontfilename)[1].lower()
         logging.info("重命名为 {}".format(newfilename))
         newfilepath = os.path.join(os.path.dirname(fontfilename), newfilename)
-        if not os.path.exists(newfilename):
+        if not os.path.exists(newfilepath):
             try:
                 if not preview:
                     os.rename(fontfilename, newfilepath)
             except OSError as e:
-                logging.error("重命名失败 {}".format(e))
+                logging.error("重命名文件 {} 失败, {}".format(fontfilename, e))
         else:
-            logging.error("重命名失败 {}".format("目标文件已存在"))
+            logging.error("重命名文件 {} 失败, 目标文件 {} 已存在".format(
+                fontfilename, newfilename))
     else:
-        logging.error("重命名失败 {}".format("没有取得有效的字体文件名"))
+        logging.error("重命名文件 {} 失败, 没有取得有效的字体文件名".format(
+            fontfilename))
     logging.info("")
 
 def main():
@@ -228,9 +231,9 @@ def main():
 """,
         formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('file', nargs='+',help="字体文件名")
-    parser.add_argument('-l', '--loglevel', default='normal',
+    parser.add_argument('-l', '--loglevel', default='info',
         choices=['none', 'error', 'warning', 'info', 'debug'],
-        help="输出信息，后面的选项包含前面所有选项，默认为 normal")
+        help="输出信息，后面的选项包含前面所有选项，默认为 info")
     parser.add_argument('-p', '--preview', action="store_true",
         help="预览，只输出信息而不重命名文件")
     args = parser.parse_args()
