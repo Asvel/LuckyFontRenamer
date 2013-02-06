@@ -103,7 +103,6 @@ sfnt_info_priority = [
 def guess_sfnt_name(face, autochoose=True):
     # 获取原始字体名称
     names = [face.get_sfnt_name(i) for i in range(face.sfnt_name_count)]
-    langs = {x.language_id for x in names}
     names = [x for x in names if x.name_id == 4]
 
     # 猜测字体名称的编码并尝试解码
@@ -172,17 +171,20 @@ def guess_names(fontfilename):
         faces = []
         print("无法载入文件", fontfilename, "-", e, file=output_error)
     for face in faces:
+        name = ""
         if face.sfnt_name_count > 0:
             name = guess_sfnt_name(face, True)
-        else:
+        if name == "":
             try:
                 name = face.family_name.decode('ascii')
             except:
-                try:
-                    name = face.postscript_name.decode('ascii')
-                except:
-                    name = None
-        if name is not None:
+                name = ""
+        if name == "":
+            try:
+                name = face.postscript_name.decode('ascii')
+            except:
+                name = ""
+        if name != "":
             if name not in names:
                 names.append(name)
         else:
