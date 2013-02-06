@@ -227,19 +227,27 @@ def main():
 示例：
     %(prog)s msyh.ttc
     %(prog)s *fontlist.txt
-    %(prog)s \\C:\\test\\ -o debug -p
+    %(prog)s \\C:\\test\\ -l debug -o debug.txt -p
 """,
         formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('file', nargs='+',help="字体文件名")
     parser.add_argument('-l', '--loglevel', default='info',
         choices=['none', 'error', 'warning', 'info', 'debug'],
         help="输出信息，后面的选项包含前面所有选项，默认为 info")
+    parser.add_argument('-o', '--output', default=None,
+        help="输出文件，默认输出至 stderr")
     parser.add_argument('-p', '--preview', action="store_true",
         help="预览，只输出信息而不重命名文件")
     args = parser.parse_args()
 
+    output = args.output
+    if output is None:
+        output = sys.stderr
+    else:
+        output = open(output, mode='w', encoding='utf-8')
+
     loglevel = getattr(logging, args.loglevel.upper(), logging.CRITICAL)
-    logging.basicConfig(format='%(message)s', level=loglevel)
+    logging.basicConfig(format='%(message)s', level=loglevel, stream=output)
 
     preview = args.preview
 
@@ -259,6 +267,7 @@ def main():
         try_to_rename(file, preview)
 
     logging.shutdown()
+    output.close()
 
 if __name__ == '__main__':
     main()
