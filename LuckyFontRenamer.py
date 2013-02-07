@@ -184,7 +184,7 @@ def guess_names(fontfilename):
     return names
 
 def try_to_rename(fontfilename, preview=False):
-    logging.info(fontfilename)
+    logging.info("\n{}".format(fontfilename))
     names = guess_names(fontfilename)
     newfilemain = " & ".join(names)
     if newfilemain != "":
@@ -205,7 +205,6 @@ def try_to_rename(fontfilename, preview=False):
     else:
         logging.error("重命名文件 {} 失败, 没有取得有效的字体文件名".format(
             fontfilename))
-    logging.info("")
 
 def main():
     import argparse
