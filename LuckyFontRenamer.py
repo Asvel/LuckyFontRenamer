@@ -186,12 +186,14 @@ def guess_names(fontfilename):
 def try_to_rename(fontfilename, preview=False):
     logging.info(fontfilename)
     names = guess_names(fontfilename)
-    newfilename = " & ".join(names)
-    if newfilename != "":
-        newfilename += os.path.splitext(fontfilename)[1].lower()
+    newfilemain = " & ".join(names)
+    if newfilemain != "":
+        oldfiledir, oldfilename = os.path.split(fontfilename)
+        oldfilemain, oldfileext = os.path.splitext(oldfilename)
+        newfilename = newfilemain + oldfileext.lower()
+        newfilepath = os.path.join(oldfiledir, newfilename)
         logging.info("重命名为 {}".format(newfilename))
-        newfilepath = os.path.join(os.path.dirname(fontfilename), newfilename)
-        if not os.path.exists(newfilepath):
+        if not os.path.exists(newfilepath) or oldfilemain == newfilemain:
             try:
                 if not preview:
                     os.rename(fontfilename, newfilepath)
