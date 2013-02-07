@@ -5,7 +5,8 @@ import sys
 import re
 import logging
 
-sys.path.append(os.path.dirname(__file__))
+if '__file__' in globals():
+    sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import freetype
 
 sfnt_info_encoding = {
