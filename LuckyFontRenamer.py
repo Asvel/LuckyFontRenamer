@@ -9,6 +9,8 @@ if '__file__' in globals():
     sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import freetype
 
+# SFNT名称表中平台ID和语言ID可能对应的编码方式
+# sfnt_info_encoding[name.platform_id][name.encoding_id]
 sfnt_info_encoding = {
     0:{
         0:'utf_16_be',
@@ -79,6 +81,8 @@ sfnt_info_encoding = {
         },
 }
 
+# 不同SFNT信息选择的优先级
+# (language_id, name.platform_id, name.encoding_id)
 sfnt_info_priority = [
     (2052, 3, 3),
     (2052, 3, 1),
@@ -98,6 +102,13 @@ sfnt_info_priority = [
 ]
 
 def guess_sfnt_name(face, autochoose=True):
+    """猜测带有SFNT名称表的字体的字体名称
+
+    face 字体
+    autochoose 自动从结果集里选择一个结果，根据 sfnt_info_priority
+    返回值 当 autochoose 为 False 时返回字体名称集，否则返回一个字体名称
+    """
+
     # 获取原始字体名称
     names = [face.get_sfnt_name(i) for i in range(face.sfnt_name_count)]
     names = [x for x in names if x.name_id == 4]
@@ -152,6 +163,11 @@ def guess_sfnt_name(face, autochoose=True):
         return {x.unicode for x in names}
 
 def guess_names(fontfilename):
+    """猜测字体文件中所有字体的首选名称
+
+    fontfilename 字体文件路径
+    返回 返回猜测得到的字体名称列表
+    """
     names = []
     try:
         faces = [freetype.Face(fontfilename)]
@@ -184,6 +200,12 @@ def guess_names(fontfilename):
     return names
 
 def try_to_rename(fontfilename, preview=False):
+    """尝试重命名一个字体文件
+
+    fontfilename 字体文件路径
+    preview 是否仅预览而不是真正重命名文件
+    """
+
     logging.info("\n{}".format(fontfilename))
     names = guess_names(fontfilename)
     newfilemain = " & ".join(names)
@@ -207,6 +229,9 @@ def try_to_rename(fontfilename, preview=False):
             fontfilename))
 
 def main():
+    """主函数，提供命令行用户界面
+    """
+
     import argparse
     class ArgumentParser(argparse.ArgumentParser):
         def format_usage(self):
