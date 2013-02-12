@@ -1,4 +1,7 @@
 猜测字体的本地化名称并重命名字体文件
+https://github.com/Asvel/LuckyFontRenamer
+
+== 介绍 ==
 
 很多常见字体年代久远，诞生在unicode各种不普及的上个世纪
 它们内部信息的编码方式十分混乱，其中一部分甚至不是当今的常见编码方式
@@ -14,11 +17,25 @@
 
 当然对于中日韩文字体名称猜测的准确度应该至少是优于Windows系统的字体引擎的
 对于其它语言字体名称猜测的容错能力貌似也优于大部分其它类似工具
+当然，就像程序的名字里写的，看运气啦 >_<
+
+== 用法 ==
+
+直接拖拽字体文件到主程序的图标上
+或者从命令行附加参数 -h 运行查看详细的命令行用法
+
+== 许可证&免责声明 ==
+
+LuckyFontRenamer在MIT许可证（ http://opensource.org/licenses/MIT ）下发行
+
+== 开发 ==
 
 依赖
 freetype-py3
 
 使用 Python 3 开发，不兼容 Python 2
 
-许可证&免责声明
-LuckyFontRenamer在MIT许可证（ http://opensource.org/licenses/MIT ）下发行
+== 版本 ==
+
+0.1
+2012-02-07
