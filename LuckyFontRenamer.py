@@ -47,6 +47,11 @@ def _patch_argparse_to_chinese():
         "positional arguments": "必须参数",
         "optional arguments": "可选参数",
         "show this help message and exit": "显示此帮助并退出",
+        "%(prog)s: error: %(message)s\n": "%(prog)s: 错误: %(message)s\n",
+        "the following arguments are required: %s": "下列参数是必须的: %s",
+        "unrecognized arguments: %s": "无法识别的参数: %s",
+        "invalid choice: %(value)r (choose from %(choices)s)":
+            "无效的选择: %(value)r (从 %(choices)s 中选择)",
     }
     gettext = lambda *args: texts.get(args[0], args[0])
     import argparse
