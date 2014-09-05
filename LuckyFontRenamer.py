@@ -10,6 +10,8 @@ from os import path
 from codecs import open
 from argparse import ArgumentParser, RawTextHelpFormatter
 
+__version__ = '0.2.0'
+
 here = path.abspath(path.dirname(sys.executable if getattr(sys, 'frozen', False) else __file__))
 os.environ["PATH"] += os.pathsep + here  # 为了找到 freetype 的动态链接库
 from fontname import guess_font_name
@@ -76,6 +78,9 @@ def main():
     parser.add_argument(
         'file', nargs='+', type=unicode,
         help="字体文件或目录")
+    parser.add_argument(
+        '-v', '--version', action='version', version=__version__,
+        help="显示版本")
     parser.add_argument(
         '-l', '--loglevel', default='warning',
         choices=['none', 'error', 'warning', 'info', 'debug'],
