@@ -1,30 +1,21 @@
-# !/usr/bin/env python
+# !/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-from __future__ import division, absolute_import, print_function, unicode_literals
 
 import logging
 import os
-import sys
+import fontname
 from os import path
-from codecs import open
 from argparse import ArgumentParser, RawTextHelpFormatter
 
-__version__ = '0.2.0'
+__version__ = '0.3.0'
 
-here = path.abspath(path.dirname(sys.executable if getattr(sys, 'frozen', False) else __file__))
-os.environ["PATH"] += os.pathsep + here  # 为了找到 freetype 的动态链接库
-from fontname import guess_font_name
-
-if sys.version_info[0] == 3:
-    unicode = str
 
 
 def rename(file, preview=False):
     logging.info("\n字体文件 %s", file)
 
     try:
-        font_name = guess_font_name(file)
+        font_name = fontname.get_display_names(file)
     except Exception as e:
         return logging.error("重命名文件 %s 失败，%s", file, e)
     if not font_name:
@@ -64,7 +55,7 @@ def main():
     _patch_argparse_to_chinese()
 
     parser = ArgumentParser(
-        description='猜测字体的本地化名称并重命名字体文件',
+        description='解析字体的本地化名称并重命名字体文件',
         epilog="""\
 备注:
     字体文件名可以使用 * 开头，表示这是一个含有字体文件名列表的文本文件 (UTF-8 编码)
@@ -76,7 +67,7 @@ def main():
 """,
         formatter_class=RawTextHelpFormatter)
     parser.add_argument(
-        'file', nargs='+', type=unicode,
+        'file', nargs='+',
         help="字体文件或目录")
     parser.add_argument(
         '-v', '--version', action='version', version=__version__,
@@ -86,7 +77,7 @@ def main():
         choices=['none', 'error', 'warning', 'info', 'debug'],
         help="日志等级，默认为 warning")
     parser.add_argument(
-        '-o', '--logfile', type=unicode, default=None,
+        '-o', '--logfile', default=None,
         help="输出日志到文件而不是 stderr")
     parser.add_argument(
         '-p', '--preview', action="store_true",
